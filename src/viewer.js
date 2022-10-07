@@ -489,6 +489,13 @@ $.Viewer = function( options ) {
         this.drawer.setImageSmoothingEnabled(this.imageSmoothingEnabled);
     }
 
+    // Scroll instructions
+    if (!this.trapScroll) {
+        this.scrollInstructions = new $.ScrollInstructions({
+            viewer: this
+        });
+    }
+
     // Register the viewer
     $._viewers.set(this.element, this);
 };
