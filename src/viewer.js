@@ -252,7 +252,11 @@ $.Viewer = function( options ) {
         style.top      = "0px";
         style.left     = "0px";
     }(this.canvas.style));
-    $.setElementTouchActionNone( this.canvas );
+
+    if (!this.trapScroll) {
+        $.setElementTouchActionNone( this.canvas );
+    }
+
     if (options.tabIndex !== "") {
         this.canvas.tabIndex = (options.tabIndex === undefined ? 0 : options.tabIndex);
     }
@@ -268,7 +272,10 @@ $.Viewer = function( options ) {
         style.top       = "0px";
         style.textAlign = "left";  // needed to protect against
     }( this.container.style ));
-    $.setElementTouchActionNone( this.container );
+
+    if (!this.trapScroll) {
+        $.setElementTouchActionNone( this.container );
+    }
 
     this.container.insertBefore( this.canvas, this.container.firstChild );
     this.element.appendChild( this.container );

@@ -237,6 +237,9 @@
   * @property {Boolean} [homeFillsViewer=false]
   *     Make the 'home' button fill the viewer and clip the image, instead
   *     of fitting the image to the viewer and letterboxing.
+  * @property {Boolean} [trapScroll=true]
+  *    Trap natural scroll events for mousewheel and single touch gestures
+  *    when performed on viewer.
   *
   * @property {Boolean} [panHorizontal=true]
   *     Allow horizontal pan.
@@ -1184,6 +1187,7 @@ function OpenSeadragon( options ){
             minZoomLevel:           null,
             maxZoomLevel:           null,
             homeFillsViewer:        false,
+            trapScroll:             true,
 
             //UI RESPONSIVENESS AND FEEL
             clickTimeThreshold:     300,
