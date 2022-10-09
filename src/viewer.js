@@ -3357,42 +3357,55 @@ function onCanvasScroll( event ) {
             preventDefault: true
         };
 
-        /**
-         * Raised when a scroll event occurs on the {@link OpenSeadragon.Viewer#canvas} element (mouse wheel).
-         *
-         * @event canvas-scroll
-         * @memberof OpenSeadragon.Viewer
-         * @type {object}
-         * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
-         * @property {OpenSeadragon.MouseTracker} tracker - A reference to the MouseTracker which originated this event.
-         * @property {OpenSeadragon.Point} position - The position of the event relative to the tracked element.
-         * @property {Number} scroll - The scroll delta for the event.
-         * @property {Boolean} shift - True if the shift key was pressed during this event.
-         * @property {Object} originalEvent - The original DOM event.
-         * @property {Boolean} preventDefaultAction - Set to true to prevent default scroll to zoom behaviour. Default: false.
-         * @property {Boolean} preventDefault - Set to true to prevent the default user-agent's handling of the wheel event. Default: true.
-         * @property {?Object} userData - Arbitrary subscriber-defined object.
-         */
-         this.raiseEvent('canvas-scroll', canvasScrollEventArgs );
+        var scrollModifier;
+        if (!this.trapScroll) {
+            // Will either return 'ctrl' or 'cmd' — cmd is metaKey
+            scrollModifier = this.scrollInstructions.getScrollModifierKey() === 'ctrl' ? 'ctrlKey' : 'metaKey';
+         }
 
-        if ( !canvasScrollEventArgs.preventDefaultAction && this.viewport ) {
-            if(this.viewport.flipped){
-                event.position.x = this.viewport.getContainerSize().x - event.position.x;
+         // Only allow modified scrolls if trapScroll is turned off
+         if (this.trapScroll || (!this.trapScroll && event.originalEvent[scrollModifier])) {
+            /**
+             * Raised when a scroll event occurs on the {@link OpenSeadragon.Viewer#canvas} element (mouse wheel).
+             *
+             * @event canvas-scroll
+             * @memberof OpenSeadragon.Viewer
+             * @type {object}
+             * @property {OpenSeadragon.Viewer} eventSource - A reference to the Viewer which raised this event.
+             * @property {OpenSeadragon.MouseTracker} tracker - A reference to the MouseTracker which originated this event.
+             * @property {OpenSeadragon.Point} position - The position of the event relative to the tracked element.
+             * @property {Number} scroll - The scroll delta for the event.
+             * @property {Boolean} shift - True if the shift key was pressed during this event.
+             * @property {Object} originalEvent - The original DOM event.
+             * @property {Boolean} preventDefaultAction - Set to true to prevent default scroll to zoom behaviour. Default: false.
+             * @property {Boolean} preventDefault - Set to true to prevent the default user-agent's handling of the wheel event. Default: true.
+             * @property {?Object} userData - Arbitrary subscriber-defined object.
+             */
+            this.raiseEvent('canvas-scroll', canvasScrollEventArgs );
+
+            if ( !canvasScrollEventArgs.preventDefaultAction && this.viewport ) {
+                if(this.viewport.flipped){
+                    event.position.x = this.viewport.getContainerSize().x - event.position.x;
+                }
+
+                gestureSettings = this.gestureSettingsByDeviceType( event.pointerType );
+                if ( gestureSettings.scrollToZoom ) {
+                    factor = Math.pow( this.zoomPerScroll, event.scroll );
+                    this.viewport.zoomBy(
+                        factor,
+                        gestureSettings.zoomToRefPoint ? this.viewport.pointFromPixel( event.position, true ) : null
+                    );
+                    this.viewport.applyConstraints();
+                }
             }
 
-            gestureSettings = this.gestureSettingsByDeviceType( event.pointerType );
-            if ( gestureSettings.scrollToZoom ) {
-                factor = Math.pow( this.zoomPerScroll, event.scroll );
-                this.viewport.zoomBy(
-                    factor,
-                    gestureSettings.zoomToRefPoint ? this.viewport.pointFromPixel( event.position, true ) : null
-                );
-                this.viewport.applyConstraints();
-            }
+            event.preventDefault = canvasScrollEventArgs.preventDefault;
+        } else {
+            this.scrollInstructions.updateText('wheel');
+            this.scrollInstructions.show();
         }
-
-        event.preventDefault = canvasScrollEventArgs.preventDefault;
     } else {
+
         event.preventDefault = true;
     }
 }

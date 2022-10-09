@@ -45,14 +45,16 @@
 $.ScrollInstructions = function( options ) {
 
     this.options = $.extend(true, options, {
-        wheelText: 'Use ' + getScrollModifierKey() + ' + scroll to zoom',
+        wheelText: 'Use ' + this.getScrollModifierKey() + ' + scroll to zoom',
         touchText: 'Use two fingers to pan',
     });
 
     this.viewer = this.options.viewer;
+    this.showTimeout = null;
+    this.fadeBeginTime = null;
 
     if (this.viewer) {
-        this.instructionsEl = insertInstructions(this.viewer.container);
+        this.element = insert(this.viewer.container);
     }
 
 };
@@ -64,13 +66,43 @@ $.ScrollInstructions.prototype = {
      * @function
      * @param {('touch'|'wheel')} type Type of insruction text to display
      */
-    updateInstructionsText: function(type) {
+    updateText: function(type) {
         // TODO: What about 'pen' / 'unknown' ?
-        if (type === 'touch') {
-            this.instructionsEl.innerText = this.options.touchText;
-        } else {
-            this.instructionsEl.innerText = this.options.wheelText;
+        var text = type === 'touch' ? this.options.touchText : this.options.wheelText;
+        if (this.element.innerText !== text) {
+            this.element.innerText = text;
         }
+    },
+    /**
+     * Detetmine what the modifier key should be for scroll based on system platform
+     * @function
+     * @return {String} String for the key needed to scroll
+     */
+    getScrollModifierKey: function() {
+        var platform = navigator.userAgentData.platform ? navigator.userAgentData.platform : navigator.platform;
+        // Mac users will need to use cmd, other platforms are ctrl
+        if (isMacLike(platform)) {
+            return 'cmd';
+        } else {
+            return 'ctrl';
+        }
+    },
+    /**
+     * Show the instructions element and set a timer for hiding
+     * @function
+     */
+    show: function() {
+        var _this = this;
+        this.element.style.opacity = 1;
+
+        // Cancel the timeout if called again
+        clearTimeout(this.showTimeout);
+        this.showTimeout = null;
+
+        // Wait before hiding
+        this.showTimeout = setTimeout(function() {
+            _this.element.style.opacity = 0;
+        }, 2000);
     }
 };
 
@@ -91,23 +123,6 @@ function isMacLike(platform) {
 
 
 /**
- * Detetmine what the modifier key should be for scroll based on system platform
- * @private
- * @inner
- * @function
- * @return {String} String for the key needed to scroll
- */
-function getScrollModifierKey () {
-    var platform = navigator.userAgentData.platform ? navigator.userAgentData.platform : navigator.platform;
-    // Mac users will need to use cmd, other platforms are ctrl
-    if (isMacLike(platform)) {
-        return 'cmd';
-    } else {
-        return 'ctrl';
-    }
-}
-
-/**
  * Create and insert HTML for instruction text to be inserted into
  * @private
  * @inner
@@ -115,7 +130,7 @@ function getScrollModifierKey () {
  * @param {HTMLElement} container - The element to insert the instructions into
  * @return {HTMLDivElement} The HTML element for inserted the instructions
  */
-function insertInstructions(container) {
+function insert(container) {
     var instructionsEl = document.createElement('div');
     instructionsEl.classList.add('openseadragon-scroll-instructions');
     Object.assign(instructionsEl.style, {
@@ -132,6 +147,7 @@ function insertInstructions(container) {
         opacity: '0',
         touchAction: 'none',
         pointerEvents: 'none',
+        transition: 'opacity 1s',
     });
     container.insertAdjacentElement('beforeend', instructionsEl);
     return container.lastElementChild;
