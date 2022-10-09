@@ -116,8 +116,24 @@ function getScrollModifierKey () {
  * @return {HTMLDivElement} The HTML element for inserted the instructions
  */
 function insertInstructions(container) {
-    var instructionsHTML = '<div class="openseadragon-scroll-instructions"></div>';
-    container.insertAdjacentHTML('beforeend', instructionsHTML);
+    var instructionsEl = document.createElement('div');
+    instructionsEl.classList.add('openseadragon-scroll-instructions');
+    Object.assign(instructionsEl.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: '#fff',
+        background: 'rgba(0,0,0,0.5)',
+        opacity: '0',
+        touchAction: 'none',
+        pointerEvents: 'none',
+    });
+    container.insertAdjacentElement('beforeend', instructionsEl);
     return container.lastElementChild;
 }
 
